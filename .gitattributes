@@ -1,2 +1,4 @@
-# Auto detect text files and perform LF normalization
+# LF换行符问题
 * text=auto
+*.sh text eol=lf
+bootstrap text eol=lf

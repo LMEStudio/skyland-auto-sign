@@ -1,0 +1,10 @@
+build
+dist
+skyland.spec
+logs
+.idea
+TOKEN.txt
+.pyc
+src\secret.json
+src\config.ini
+src\TOKEN.txt

@@ -1,0 +1,42 @@
+# run main.py
+name: Auto Sign
+on:
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+          pip install cryptography
+      - name: Run main.py
+        env:
+          GitHub_Actions: true
+          # 对于多个账号一定会有人机验证问题，且因为是密码，有一定的安全风险
+          # PHONE: ${{ secrets.PHONE }}
+          # PASSWORD: ${{ secrets.PASSWORD }}
+          TOKEN: ${{ secrets.TOKEN }}
+          SECRET: ${{ secrets.SECRET }}
+        run: |
+          python src/main.py
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: logs
+          path: logs/
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1

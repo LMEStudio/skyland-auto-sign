@@ -1,0 +1,10 @@
+{
+    "messagePush": {
+        "enabled": true
+    },
+    "useProxy": {
+        "enabled": false,
+        "addr": ""
+    },
+    "exitWhenFail": false
+}
