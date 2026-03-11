@@ -175,19 +175,19 @@ def pushMessage(message):
         #TODO: 判断是否失败
         if provider["provider"] == "server_chan_turbo":
             message = _format_serverchan_desp(message)
-            console.print(f"[bold cyan]完成 {provider["provider"]} 推送\n{serverChanTurbo(message, pushToken)}[/bold cyan]")
+            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n{serverChanTurbo(message, pushToken)}[/bold cyan]")
         if provider["provider"] == "server_chan_cubed":
             message = _format_serverchan_desp(message)
             uid = provider["uid"]
-            console.print(f"[bold cyan]完成 {provider["provider"]} 推送\n{serverChanCubed(message, pushToken, uid)}[/bold cyan]")
+            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n{serverChanCubed(message, pushToken, uid)}[/bold cyan]")
         if provider["provider"] == "pushplus":
             topic = provider["topic"]
-            console.print(f"[bold cyan]完成 {provider["provider"]} 推送\n{pushplus(message, pushToken, topic)}[/bold cyan]")
+            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n{pushplus(message, pushToken, topic)}[/bold cyan]")
         if provider["provider"] == "qmsg":
             type = provider["type"]
             qq = provider.get("qq", "")
             bot = provider.get("bot", "")
-            console.print(f"[bold cyan]完成 {provider["provider"]} 推送\n{qmsg(message, pushToken, qq, bot, type)}[/bold cyan]")
+            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n{qmsg(message, pushToken, qq, bot, type)}[/bold cyan]")
         else:
             continue
 
