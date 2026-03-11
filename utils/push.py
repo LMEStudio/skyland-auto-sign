@@ -17,7 +17,7 @@ console = Console()
 
 LOGFILE = f"logs/{date.today().strftime('%Y-%m-%d')}.log"
 
-title = f'森空岛自动签到结果 - {date.today().strftime('%Y-%m-%d')}'
+title = f"森空岛自动签到结果 - {date.today().strftime('%Y-%m-%d')}"
 
 def composeMessage(all_logs: list[str]):
     logFile = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), LOGFILE)
