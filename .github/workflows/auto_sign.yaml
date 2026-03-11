@@ -27,8 +27,7 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
           SECRET: ${{ secrets.SECRET }}
         run: |
-          cd src
-          python ./main.py
+          python main.py
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
