@@ -7,5 +7,5 @@
         "addr": ""
     },
     "exitWhenFail": false,
-    "renewPeriod": "2592000"
+    "renewPeriod": 2592000
 }

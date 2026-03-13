@@ -128,7 +128,7 @@ if __name__ == '__main__':
             elif choice == "3":
                 key = "renewPeriod"
                 printKey(key)
-                config[key] = Prompt.ask("[cyan]*[/cyan] 刷新间隔(s)") 
+                config[key] = int(Prompt.ask("[cyan]*[/cyan] 刷新间隔(s)")) 
                 with open("config.json", "w", encoding="utf-8") as f:
                     json.dump(config, f, ensure_ascii=False, indent=4)
                 printKey(key)
