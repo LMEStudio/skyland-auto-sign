@@ -1,5 +1,5 @@
 # run main.py
-name: Auto Sign
+name: Skyland Auto Sign
 on:
   schedule:
     - cron: '0 0 * * *'
@@ -24,7 +24,6 @@ jobs:
           # 对于多个账号一定会有人机验证问题，且因为是密码，有一定的安全风险
           # PHONE: ${{ secrets.PHONE }}
           # PASSWORD: ${{ secrets.PASSWORD }}
-          TOKEN: ${{ secrets.TOKEN }}
           SECRET: ${{ secrets.SECRET }}
         run: |
           python main.py

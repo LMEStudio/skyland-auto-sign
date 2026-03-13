@@ -9,8 +9,4 @@ RUN mkdir -p logs
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-ENV TOKEN=""
-ENV SC3_SENDKEY=""
-ENV SC3_UID=""
-
-CMD ["python", "src/main.py" ]
+CMD ["python", "main.py" ]

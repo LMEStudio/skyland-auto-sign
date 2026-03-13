@@ -4,12 +4,9 @@ import logging
 from utils.skyland import start
 from utils.logger import config_logger
 from utils.config import get_config
-from utils.push import pushMessage, composeMessage, initPushConfig
+from utils.push import pushMessage, composeMessage
 
 config = get_config()
-
-# import os
-# exit_when_fail_env = os.environ.get('EXIT_WHEN_FAIL')
 
 if __name__ == '__main__':
     config_logger(level=logging.INFO)

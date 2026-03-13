@@ -3,10 +3,7 @@ dist
 skyland.spec
 logs
 .idea
-TOKEN.txt
 .pyc
 
-src/TOKEN.txt
-src/secret.example.json
 src/secret.json
 secret.json

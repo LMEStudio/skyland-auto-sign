@@ -1,26 +1,26 @@
-import hashlib
-import hmac
-import json
+import hashlib, hmac
+import json, os
 import logging
-import os.path
 import threading
 import time
 from getpass import getpass
 from urllib import parse
-
 import requests
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.panel import Panel
 
 from utils.SecuritySm import get_d_id
 from utils.config import get_config, get_secret
 
 config = get_config()
 secret = get_secret()
+console = Console()
 
-token_save_name = 'TOKEN.txt'
 app_code = '4ca99fa6b56cc2ba'
-token_env = os.environ.get('TOKEN')
+# token_env = os.environ.get('TOKEN')
 # 现在想做什么？
-current_type = os.environ.get('SKYLAND_TYPE')
+# current_type = os.environ.get('SKYLAND_TYPE')
 
 http_local = threading.local()
 header = {
@@ -103,6 +103,7 @@ def get_sign_header(url: str, method, body, h):
     return h
 
 
+# deprecated
 def login_by_code():
     phone = input('请输入手机号码：')
     resp = requests.post(login_code_url, json={'phone': phone, 'type': 2}, headers=header_login).json()
@@ -113,12 +114,9 @@ def login_by_code():
     return get_token(r)
 
 
+# deprecated
 def login_by_token():
     token_code = input("请输入（登录森空岛电脑官网后请访问这个网址：https://web-api.skland.com/account/info/hg）:")
-    return parse_user_token(token_code)
-
-
-def parse_user_token(t):
     try:
         t = json.loads(t)
         return t['data']['content']
@@ -127,10 +125,8 @@ def parse_user_token(t):
     return t
 
 
-def login_by_password():
-    phone = input('请输入手机号码：')
-    password = getpass('请输入密码(不会显示在屏幕上面)：')
-    r = requests.post(token_password_url, json={"phone": phone, "password": password}, headers=header_login).json()
+def login_by_password(username, password):
+    r = requests.post(token_password_url, json={"phone": username, "password": password}, headers=header_login).json()
     return get_token(r)
 
 
@@ -169,6 +165,7 @@ def get_cred(grant):
     return resp['data']
 
 
+# unknown
 def refresh_token():
     headers = get_sign_header(refresh_token_url, 'get', None, http_local.header)
     resp = requests.get(refresh_token_url, headers=headers).json()
@@ -185,7 +182,7 @@ def get_binding_list():
         logging.error(f"请求角色列表出现问题：{resp['message']}")
         if resp.get('message') == '用户未登录':
             logging.error(f'用户登录可能失效了，请重新运行此程序！')
-            os.remove(token_save_name)
+            # os.remove(token_save_name)
             return []
     for i in resp['data']['list']:
         # 也许有些游戏没有签到功能？
@@ -225,10 +222,21 @@ def sign_for_endfield(data: dict):
     game_name = data.get('gameName')
     channel = data.get("channelName")
     result = []
-    for i in roles:
-        nickname = i.get('nickname') or ''
-        resp = do_sign_for_endfield(i)
-        j = resp.json()
+    for role in roles:
+        nickname = role.get('nickname') or ''
+
+        url = sign_url_mapping['endfield']
+        headers = get_sign_header(url, 'post', None, http_local.header)
+        headers.update({
+            'Content-Type': 'application/json',
+            # FIXME b服不知道是不是这样
+            # gameid_roleid_serverid
+            'sk-game-role': f'3_{role["roleId"]}_{role["serverId"]}',
+            'referer': 'https://game.skland.com/',
+            'origin': 'https://game.skland.com/'
+        })
+        j = requests.post(url, headers=headers).json()
+
         if j['code'] != 0:
             result.append(f'[{game_name}]角色{nickname}({channel})签到失败了！原因:{j["message"]}')
         else:
@@ -244,21 +252,6 @@ def sign_for_endfield(data: dict):
 
             result.append(f'[{game_name}]角色{nickname}({channel})签到成功，获得了:{",".join(awards_result)}')
     return result
-
-
-def do_sign_for_endfield(role: dict):
-    url = sign_url_mapping['endfield']
-    headers = get_sign_header(url, 'post', None, http_local.header)
-    headers.update({
-        'Content-Type': 'application/json',
-        # FIXME b服不知道是不是这样
-        # gameid_roleid_serverid
-        'sk-game-role': f'3_{role["roleId"]}_{role["serverId"]}',
-        'referer': 'https://game.skland.com/',
-        'origin': 'https://game.skland.com/'
-    })
-    return requests.post(url, headers=headers)
-
 
 def do_sign(cred_resp):
     http_local.token = cred_resp['token']
@@ -281,74 +274,89 @@ def do_sign(cred_resp):
     return success, logs_out
 
 
-def save(token):
-    with open(token_save_name, 'w') as f:
-        f.write(token)
-    logging.info(
-        f'您的鹰角网络通行证保存在{token_save_name}, 打开这个可以把它复制到云函数服务器上执行!\n双击添加账号即可再次添加账号')
+def saveToken(secret, token):
+    secret['tokens'].append(token)
+    secret['tokens'] = list(set(secret['tokens']))
+    console.rule(f"[bold cyan]目前保存的 Tokens[/bold cyan]")
+    console.print(f"[bold green]{secret['tokens']}[/bold green]")
+    return secret
 
 
-def read(path):
-    if not os.path.exists(token_save_name):
-        return []
-    v = []
-    with open(path, 'r', encoding='utf-8') as f:
-        for i in f.readlines():
-            i = i.strip()
-            i and i not in v and v.append(i)
-    return v
+def updateToken(secret, tokenOld, tokenNew):
+    secret['tokens'].remove(tokenOld)
+    secret['tokens'].append(tokenNew)
+    secret['tokens'] = list(set(secret['tokens']))
+    console.rule(f"[bold cyan]目前保存的 Tokens[/bold cyan]")
+    console.print(f"[bold green]{secret['tokens']}[/bold green]")
+    return secret
 
 
-def read_from_env():
-    v = []
-    token_list = token_env.split(',')
-    for i in token_list:
-        i = i.strip()
-        if i and i not in v:
-            v.append(parse_user_token(i))
-    logging.info(f'从环境变量中读取到{len(v)}个token...')
-    return v
+def verifyIntegrity(secret: dict):
+    if 'pushProvider' not in secret:
+        secret['pushProvider'] = []
+    if 'tokens' not in secret:
+        secret['tokens'] = []
+    if 'auth' not in secret:
+        secret['auth'] = []
+    return secret
 
-
-def init_token():
-    if token_env:
-        logging.info('使用环境变量里面的token')
-        # 对于github action,不需要存储token,因为token在环境变量里
-        return read_from_env()
-    tokens = []
-    tokens.extend(read(token_save_name))
-    add_account = current_type == 'add_account'
-    if add_account:
-        logging.info('！！！您启用了添加账号模式，将不会签到！！！')
-    if len(tokens) == 0 or add_account:
-        tokens.append(input_for_token())
-        save('\n'.join(tokens))
-    return [] if add_account else tokens
-
-
-def input_for_token():
-    print("请输入你需要做什么：")
-    print("1.使用用户名密码登录（非常推荐）")
-    print("2.使用手机验证码登录（非常推荐，但可能因为人机验证失败）")
-    print("3.手动输入鹰角网络通行证账号登录")
-    mode = input('请输入（1，2，3）：')
-    if mode == '' or mode == '1':
-        token = login_by_password()
-    elif mode == '2':
-        token = login_by_code()
-    elif mode == '3':
-        token = login_by_token()
+def saveAccount(account: dict):
+    if os.path.exists("secret.json"):
+        with open("secret.json", "r", encoding="utf-8", newline="\n") as f:
+            secret = json.load(f)
+            secret = verifyIntegrity(secret)
     else:
-        exit(-1)
-    return token
+        secret['auth'] = []
+        secret['tokens'] = []
+        secret['pushProvider'] = []
+    exist = False
+    for accountExist in secret['auth']:
+        if accountExist['username'] == account['username']:
+            exist = True
+            console.print("[bold yellow]已存在账户，修改账户信息[/bold yellow]")
+            for token in secret['tokens']:
+                if token == accountExist['token']:
+                    secret = updateToken(secret, token, account['token'])
+                    break
+            secret['auth'].remove(accountExist)
+            secret['auth'].append(account)
+            break
+    if not exist:
+        secret['auth'].append(account)
+        secret = saveToken(secret, account['token'])
+    with open("secret.json", "w", encoding="utf-8") as f:
+        json.dump(secret, f, ensure_ascii=False, indent=4)
+    console.rule(f"[bold cyan]目前保存的账户[/bold cyan]")
+    console.print(f"[bold green]{secret['auth']}[/bold green]")
+
+
+def login(username, password):
+    token = login_by_password(username, password)
+    account = {
+        "username": username,
+        "password": password,
+        "token": token,
+        "needRenewBefore": int(time.time()) + config['renewPeriod'] # 846000: 10天
+    }
+    return account
+
+
+def cheakRenewal(user: dict):
+    if user['needRenewBefore'] < int(time.time()):
+        logging.info(f"账户{user['username']}距离上次登录时间较长，重新获取 Token")
+        user = login(user['username'], user['password'])
+        saveAccount(user)
+
 
 def start():
-    token = init_token()
+    for account in secret['auth']:
+        cheakRenewal(account)
+    tokens = secret['tokens']
     success = True
-    all_logs = []  # 新增：汇总所有账号/角色的输出
-    for i in token:
+    all_logs = []  # 汇总所有账号/角色的输出
+    for token in tokens:
         try:
-            sign_success, logs_out = do_sign(get_cred_by_token(i))
+            sign_success, logs_out = do_sign(get_cred_by_token(token))
             all_logs.extend(logs_out)
             if not sign_success:
                 success = False

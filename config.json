@@ -6,5 +6,6 @@
         "enabled": false,
         "addr": ""
     },
-    "exitWhenFail": false
+    "exitWhenFail": false,
+    "renewPeriod": "2592000"
 }
