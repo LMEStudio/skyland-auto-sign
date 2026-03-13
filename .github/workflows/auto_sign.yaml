@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: secret
+    environment: sign
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.13
@@ -22,8 +22,6 @@ jobs:
         env:
           # GitHub_Actions: true
           # 对于多个账号一定会有人机验证问题，且因为是密码，有一定的安全风险
-          # PHONE: ${{ secrets.PHONE }}
-          # PASSWORD: ${{ secrets.PASSWORD }}
           SECRET: ${{ secrets.SECRET }}
         run: |
           python main.py
