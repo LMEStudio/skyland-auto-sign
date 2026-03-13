@@ -5,5 +5,7 @@ logs
 .idea
 .pyc
 
+__pycache__*
+
 src/secret.json
 secret.json
