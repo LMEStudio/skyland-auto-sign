@@ -1,13 +1,94 @@
 # skyland-auto-sign
 
-明日方舟森空岛一键签到脚本，基于python  
-A fork from [gitee.com/FancyCabbage/skyland-auto-sign](https://gitee.com/FancyCabbage/skyland-auto-sign)
+基于 Python 的明日方舟森空岛一键签到脚本  
+A fork from [gitee.com/FancyCabbage/skyland-auto-sign](https://gitee.com/FancyCabbage/skyland-auto-sign), which changed the secret structure for better management for automation.  
 
 ## Deployment
 
 * Docker
 * GitHub Actions
 * Local
+
+## Usage
+
+1. Install dependencies of `requirements.txt`.  
+2. Run at least once `configure.py` to generate `secret.json`.  
+3. Run `main.py` to execute locally.  
+4. (Additionally) To run on GitHub Actions, you need to fork the repository and allow the repository to run `Actions` in `Settings`, and create a environment `sign` which contains a environment variable `secret` including `secret.json` file. If you use cloud service for automatically runnings, each time you modify configuration or secret, you need to update the repository.  
+5. (Additionally) To configure a push service, you need to run `configure.py` again and follow the instructions. If you use cloud service for automatically runnings, you need to update the repository.  
+6. (Additionally) To modify default settings, you need to run `configure.py` again and generate new `config.py`. If you use cloud service for automatically runnings, you need to update the repository.  
+7. Supported push service providers:  
+
+    |Providers|Links|Names in `secret.json`|Required Parameters|
+    |------|------|------|------|
+    |Server Chan Turbo|[https://sct.ftqq.com/](https://sct.ftqq.com/)|`server_chan_turbo`|`provider`, `token`|
+    |Server Chan Cubed|[https://sc3.ft07.com/](https://sc3.ft07.com/)|`server_chan_cubed`|`provider`, `token`, `uid`|
+    |pushplus|[https://www.pushplus.plus/](https://www.pushplus.plus/)|`pushplus`|`provider`, `topic` (opt.), `token`|
+    |Qmsg|[https://qmsg.zendee.cn/](https://qmsg.zendee.cn/)|`qmsg`|`provider`, `type`, `token`, `qq` (opt.), `bot` (opt.)|
+
+8. Supported `config.json` parameters:
+
+    |Parameters|Description|Necessity|Default|
+    |------|------|------|------|
+    |`messagePush`|Enable message push function|Required|`{"enabled": true}`|
+    |`useProxy`|Enable proxy and configure proxy addresses|Dispensable|`{"enabled": false,"addr": ""}`|
+    |`exitWhenFail`|Exit when encountering failure|Required|`false`|
+    |`renewPeriod`|Control the renew period of each token (seconds)|Required|`2592000` (30 days)|
+
+9. A possible `secret.json` structure:
+
+    ```json
+    {
+        "pushProvider": [
+            {
+                "provider": "server_chan_turbo",
+                "token": ""
+            },
+            {
+                "provider": "server_chan_cubed",
+                "token": "",
+                "uid": ""
+            },
+            {
+                "provider": "pushplus",
+                "topic": "",
+                "token": ""
+            },
+            {
+                "provider": "qmsg",
+                "type": "group",
+                "token": "",
+                "qq": "",
+                "bot": ""
+            }
+        ],
+        "auth": [
+            {
+                "username": "",
+                "password": "",
+                "token": "",
+                "needRenewBefore": ""
+            }
+        ],
+        "tokens": []
+    }
+    ```
+
+10. Default `config.json` structure
+
+    ```json
+    {
+        "messagePush": {
+            "enabled": true
+        },
+        "useProxy": {
+            "enabled": false,
+            "addr": ""
+        },
+        "exitWhenFail": false,
+        "renewPeriod": 2592000
+    }
+    ```
 
 ## sign-header
 
