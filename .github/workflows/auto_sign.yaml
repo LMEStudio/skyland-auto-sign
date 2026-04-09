@@ -10,6 +10,8 @@ jobs:
     environment: sign
     steps:
       - uses: actions/checkout@v4
+      - name: Set timezone
+        run: sudo timedatectl set-timezone 'Asia/Shanghai'
       - name: Set up Python 3.13
         uses: actions/setup-python@v4
         with:
