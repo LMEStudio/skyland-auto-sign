@@ -14,8 +14,8 @@ A fork from [gitee.com/FancyCabbage/skyland-auto-sign](https://gitee.com/FancyCa
 1. Install dependencies of `requirements.txt`.  
 2. Run at least once `configure.py` to generate `secret.json`.  
 3. Run `main.py` to execute locally.  
-4. (Additionally) To run on GitHub Actions, you need to fork the repository and allow the repository to run `Actions` in `Settings`, and create a environment `sign` which contains a environment variable `secret` including `secret.json` file. If you use cloud service for automatically runnings, each time you modify configuration or secret, you need to update the repository.  
-5. (Additionally) To configure a push service, you need to run `configure.py` again and follow the instructions. If you use cloud service for automatically runnings, you need to update the repository.  
+4. (Additionally) To run on GitHub Actions, you need to fork the repository and allow the repository to run `Actions` in `Settings`, and create a environment `sign` which contains a environment variable `secret` including `secret.json` file. If you use cloud service for automatically runnings, each time you modify configuration or secret, you need to update the repository or secret.  
+5. (Additionally) To configure a push service, you need to run `configure.py` again and follow the instructions. If you use cloud service for automatically runnings, you need to update secret.  
 6. (Additionally) To modify default settings, you need to run `configure.py` again and generate new `config.py`. If you use cloud service for automatically runnings, you need to update the repository.  
 7. Supported push service providers:  
 

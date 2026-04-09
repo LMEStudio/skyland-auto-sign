@@ -6,10 +6,9 @@ import requests
 
 from utils.config import get_config
 
-# use_proxy = os.environ.get('USE_PROXY')
-
 config = get_config()
 use_proxy = config.get("useProxy", {}).get("enabled", False)
+proxy_addr = config.get("useProxy", {}).get("addr", "")
 
 def config_logger(level=logging.DEBUG):
     current_date = date.today().strftime('%Y-%m-%d')
@@ -52,7 +51,8 @@ def config_logger(level=logging.DEBUG):
         if use_proxy:
             kwargs.update({
                 'proxies': {
-                    'https': 'http://localhost:8000',
+                    'https': f'{proxy_addr}',
+                    # 'https': 'http://localhost:8000',
                 },
                 'verify': False
             })
@@ -64,7 +64,8 @@ def config_logger(level=logging.DEBUG):
         if use_proxy:
             kwargs.update({
                 'proxies': {
-                    'https': 'http://localhost:8000',
+                    'https': f'{proxy_addr}',
+                    # 'https': 'http://localhost:8000',
                 },
                 'verify': False
             })

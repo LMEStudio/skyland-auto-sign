@@ -6,16 +6,11 @@ import time
 from getpass import getpass
 from urllib import parse
 import requests
-from rich.console import Console
-from rich.prompt import Prompt
-from rich.panel import Panel
 
 from utils.SecuritySm import get_d_id
-from utils.config import get_config, get_secret
+from utils.config import get_config, get_environment, Environment
 
 config = get_config()
-secret = get_secret()
-console = Console()
 
 app_code = '4ca99fa6b56cc2ba'
 # token_env = os.environ.get('TOKEN')
@@ -88,7 +83,7 @@ def generate_signature(path, body_or_query):
     s = path + body_or_query + t + header_ca_str
     hex_s = hmac.new(token, s.encode('utf-8'), hashlib.sha256).hexdigest()
     md5 = hashlib.md5(hex_s.encode('utf-8')).hexdigest().encode('utf-8').decode('utf-8')
-    logging.info(f'算出签名: {md5}')
+    logging.debug(f'算出签名: {md5}')
     return md5, header_ca
 
 
@@ -277,8 +272,6 @@ def do_sign(cred_resp):
 def saveToken(secret, token):
     secret['tokens'].append(token)
     secret['tokens'] = list(set(secret['tokens']))
-    console.rule(f"[bold cyan]目前保存的 Tokens[/bold cyan]")
-    console.print(f"[bold green]{secret['tokens']}[/bold green]")
     return secret
 
 
@@ -286,34 +279,23 @@ def updateToken(secret, tokenOld, tokenNew):
     secret['tokens'].remove(tokenOld)
     secret['tokens'].append(tokenNew)
     secret['tokens'] = list(set(secret['tokens']))
-    console.rule(f"[bold cyan]目前保存的 Tokens[/bold cyan]")
-    console.print(f"[bold green]{secret['tokens']}[/bold green]")
     return secret
 
-
-def verifyIntegrity(secret: dict):
-    if 'pushProvider' not in secret:
-        secret['pushProvider'] = []
-    if 'tokens' not in secret:
-        secret['tokens'] = []
-    if 'auth' not in secret:
-        secret['auth'] = []
-    return secret
 
 def saveAccount(account: dict):
     if os.path.exists("secret.json"):
         with open("secret.json", "r", encoding="utf-8", newline="\n") as f:
             secret = json.load(f)
-            secret = verifyIntegrity(secret)
+    #TODO: needs env
     else:
         secret['auth'] = []
         secret['tokens'] = []
         secret['pushProvider'] = []
-    exist = False
     for accountExist in secret['auth']:
+        exist = False
         if accountExist['username'] == account['username']:
             exist = True
-            console.print("[bold yellow]已存在账户，修改账户信息[/bold yellow]")
+            logging.info(f"账户 {account['username']} 已存在，更新账户信息")
             for token in secret['tokens']:
                 if token == accountExist['token']:
                     secret = updateToken(secret, token, account['token'])
@@ -326,8 +308,7 @@ def saveAccount(account: dict):
         secret = saveToken(secret, account['token'])
     with open("secret.json", "w", encoding="utf-8") as f:
         json.dump(secret, f, ensure_ascii=False, indent=4)
-    console.rule(f"[bold cyan]目前保存的账户[/bold cyan]")
-    console.print(f"[bold green]{secret['auth']}[/bold green]")
+    return secret
 
 
 def login(username, password):
@@ -341,16 +322,29 @@ def login(username, password):
     return account
 
 
-def cheakRenewal(user: dict):
-    if user['needRenewBefore'] < int(time.time()):
-        logging.info(f"账户{user['username']}距离上次登录时间较长，重新获取 Token")
-        user = login(user['username'], user['password'])
-        saveAccount(user)
+def check(secret):
+    isModified = False
+    for user in secret['auth']:
+        if user['needRenewBefore'] < int(time.time()):
+            logging.info(f"账户 {user['username']} 距离上次登录时间较长，重新获取 Token")
+            user = login(user['username'], user['password'])
+            secretNew = saveAccount(user)
+            isModified = True
+    if isModified:
+        secret = secretNew
+        logging.info(f"过期账户 Token 均更新完毕")
+    if not isModified:
+        logging.info(f"所有账户 Token 均有效")
+    return isModified, secret
 
-
-def start():
-    for account in secret['auth']:
-        cheakRenewal(account)
+def start(secret):
+    env = get_environment()
+    if env == Environment.LOCAL or env == Environment.PACKED:
+        isModified, secret = check(secret)
+    # elif env == Environment.GITHUBACTION:
+    #     isModified, secret = check(secret)
+    #     if isModified():
+    #         os.envion['UPDATE'] = True
     tokens = secret['tokens']
     success = True
     all_logs = []  # 汇总所有账号/角色的输出

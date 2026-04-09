@@ -46,9 +46,9 @@ def _format_serverchan_desp(message) -> str:
     # Server酱 desp 使用 Markdown，单换行会折叠为一个空格，需要显式换行。
     return '  \n'.join(line.rstrip() for line in lines)
 
+
 def serverChanTurbo(message, pushToken):
     url = f"https://sctapi.ftqq.com/{pushToken}.send"
-
     data = {
         'title': title or "通知",
         'desp': message
@@ -57,11 +57,12 @@ def serverChanTurbo(message, pushToken):
     response = requests.post(url, data=data)
     if not response.status_code == 200:
         logging.error(f"Server Chan Turbo 推送失败: {response.status_code}, {response.text}")
-    # return response.text
+    else:
+        logging.info(f"Server Chan Turbo 推送成功: {response.status_code}")
+
 
 def serverChanCubed(message, pushToken, uid):
     url = f"https://{uid}.push.ft07.com/send/{pushToken}.send"
-
     data = {
         "title": title or "通知",
         "desp": message or "",
@@ -69,12 +70,13 @@ def serverChanCubed(message, pushToken, uid):
 
     response = requests.post(url, json=data)
     if not response.status_code == 200:
-        logging.error(f"pushplus 推送失败: {response.status_code}, {response.text}")
-    # return response.text
+        logging.error(f"Server Chan Cubed 推送失败: {response.status_code}, {response.text}")
+    else:
+        logging.info(f"Server Chan Cubed 推送成功: {response.status_code}")
+
 
 def pushplus(message, pushToken, topic):
     url = f"https://www.pushplus.plus/send?token={pushToken}"
-
     data = {
         'title': title or "通知", 
         "content": message or "",
@@ -84,14 +86,15 @@ def pushplus(message, pushToken, topic):
     response = requests.post(url, json=data)
     if not response.status_code == 200:
         logging.error(f"pushplus 推送失败: {response.status_code}, {response.text}")
-    # return response.text
+    else:
+        logging.info(f"pushplus 推送成功: {response.status_code}")
+
 
 def qmsg(message, pushToken, qq, bot, type):
     if type == "send":
         url = f"https://qmsg.zendee.cn/jsend/{pushToken}" #私聊
     elif type == "group":
         url = f"https://qmsg.zendee.cn/jgroup/{pushToken}" #群聊
-
     data = {
         "msg": f"{title}\n{message}",
         "qq": qq,
@@ -100,8 +103,10 @@ def qmsg(message, pushToken, qq, bot, type):
 
     response = requests.post(url, json=data)
     if not response.status_code == 200:
-        logging.error(f"pushplus 推送失败: {response.status_code}, {response.text}")
-    # return response.text
+        logging.error(f"qmsg 推送失败: {response.status_code}, {response.text}")
+    else:
+        logging.info(f"qmsg 推送成功: {response.status_code}")
+
 
 def configPush(pushProvider):
     if os.path.exists("secret.json"):
@@ -176,26 +181,21 @@ def pushMessage(message):
         if provider["provider"] == "server_chan_turbo":
             message = _format_serverchan_desp(message)
             serverChanTurbo(message, pushToken)
-            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n[/bold cyan]")
         if provider["provider"] == "server_chan_cubed":
             message = _format_serverchan_desp(message)
             uid = provider["uid"]
             serverChanCubed(message, pushToken, uid)
-            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n[/bold cyan]")
         if provider["provider"] == "pushplus":
             topic = provider["topic"]
             pushplus(message, pushToken, topic)
-            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n[/bold cyan]")
         if provider["provider"] == "qmsg":
             type = provider["type"]
             qq = provider.get("qq", "")
             bot = provider.get("bot", "")
             qmsg(message, pushToken, qq, bot, type)
-            console.print(f"[bold cyan]完成 {provider['provider']} 推送\n[/bold cyan]")
         else:
             continue
-
-    console.print(f"[bold cyan]消息推送全部完成[/bold cyan]")
+    logging.info("消息推送全部完成")
 
 
 def initPushConfig():
